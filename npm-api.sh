@@ -144,8 +144,11 @@ fi
 
 
 # API Endpoints
-# BASE_URL="http://$NGINX_IP:$NGINX_PORT/api"
-BASE_URL="$PROTOCOL://$NGINX_IP/api"
+if [ "$NGINX_PORT" -ne 0 ]; then
+    BASE_URL="$PROTOCOL://$NGINX_IP:$NGINX_PORT/api"
+else
+    BASE_URL="$PROTOCOL://$NGINX_IP/api"
+fi
 # Set Token duration validity.
 #TOKEN_EXPIRY="365d"
 #TOKEN_EXPIRY="31536000s"
