@@ -1,3 +1,4 @@
 # IDE specific files
 .vscode/
-nginx_proxy_manager_cli.conf
+npm-api.conf
+data/

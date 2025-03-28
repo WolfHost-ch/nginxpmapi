@@ -68,6 +68,7 @@ CONFIG_FILE="$SCRIPT_DIR/npm-api.conf"
 ################################
 
 # set default variables
+DEFAULT_PROTOCOL="http"
 DEFAULT_NGINX_IP="127.0.0.1"
 DEFAULT_NGINX_PORT="81"
 DEFAULT_API_USER="admin@example.com"
@@ -95,6 +96,7 @@ CoR="\033[0m"
 # load config file if exists
 if [ -f "$CONFIG_FILE" ]; then
   # First set default values
+  PROTOCOL="$DEFAULT_PROTOCOL"
   NGINX_IP="$DEFAULT_NGINX_IP"
   NGINX_PORT="$DEFAULT_NGINX_PORT"
   API_USER="$DEFAULT_API_USER"
@@ -104,6 +106,7 @@ if [ -f "$CONFIG_FILE" ]; then
   # Then load config file which will override defaults
   source "$CONFIG_FILE"
   # Finally set variables as read only
+  declare -r PROTOCOL
   declare -r NGINX_IP
   declare -r NGINX_PORT
   declare -r API_USER
@@ -115,6 +118,7 @@ if [ -f "$CONFIG_FILE" ]; then
   fi
 else
   # Use default values
+  PROTOCOL="$DEFAULT_PROTOCOL"
   NGINX_IP="$DEFAULT_NGINX_IP"
   NGINX_PORT="$DEFAULT_NGINX_PORT"
   API_USER="$DEFAULT_API_USER"
@@ -126,6 +130,7 @@ else
   if [ "$API_USER" = "$DEFAULT_API_USER" ]; then
     echo -e "\n⚠️ ${COLOR_RED}Using default API credentials - Please configure the script!${CoR}"
     echo -e "\n📝 Create configuration file: $CONFIG_FILE with content:"
+    echo -e "${COLOR_GREY}PROTOCOL=\"$PROTOCOL\"${CoR}     ${COLOR_YELLOW}(current default)${CoR}"
     echo -e "${COLOR_GREY}NGINX_IP=\"$NGINX_IP\"${CoR}     ${COLOR_YELLOW}(current default)${CoR}"
     echo -e "${COLOR_GREY}NGINX_PORT=\"$NGINX_PORT\"${CoR}  ${COLOR_YELLOW}(current default)${CoR}"
     echo -e "${COLOR_RED}API_USER=\"admin@example.com\"${CoR}  ${COLOR_RED}(required)${CoR}"
@@ -140,7 +145,7 @@ fi
 
 # API Endpoints
 # BASE_URL="http://$NGINX_IP:$NGINX_PORT/api"
-BASE_URL="https://$NGINX_IP/api"
+BASE_URL="$PROTOCOL://$NGINX_IP/api"
 # Set Token duration validity.
 #TOKEN_EXPIRY="365d"
 #TOKEN_EXPIRY="31536000s"
