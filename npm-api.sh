@@ -74,6 +74,7 @@ DEFAULT_NGINX_PORT="81"
 DEFAULT_API_USER="admin@example.com"
 DEFAULT_API_PASS="changeme"
 DEFAULT_NGINX_PATH_DOCKER="/path/docker/npm"
+DEFAULT_TOKEN_EXPIRY="1y"
 # default backup directoy (You can override with your path)
 DEFAULT_DATA_DIR="$SCRIPT_DIR/data"
 
@@ -103,6 +104,7 @@ if [ -f "$CONFIG_FILE" ]; then
   API_PASS="$DEFAULT_API_PASS"
   DATA_DIR="$DEFAULT_DATA_DIR"
   NGINX_PATH_DOCKER="$DEFAULT_NGINX_PATH_DOCKER"
+  TOKEN_EXPIRY="$DEFAULT_TOKEN_EXPIRY"
   # Then load config file which will override defaults
   source "$CONFIG_FILE"
   # Finally set variables as read only
@@ -111,6 +113,7 @@ if [ -f "$CONFIG_FILE" ]; then
   declare -r NGINX_PORT
   declare -r API_USER
   declare -r API_PASS
+  declare -r TOKEN_EXPIRY
   #declare -r DATA_DIR
   # NGINX_PATH_DOCKER is optional, only make it readonly if it was set in config
   if [ -n "${NGINX_PATH_DOCKER+x}" ]; then
@@ -125,23 +128,28 @@ else
   API_PASS="$DEFAULT_API_PASS"
   DATA_DIR="$DEFAULT_DATA_DIR"
   NGINX_PATH_DOCKER="$DEFAULT_NGINX_PATH_DOCKER"
-
-  # Check if using default API user
-  if [ "$API_USER" = "$DEFAULT_API_USER" ]; then
-    echo -e "\n⚠️ ${COLOR_RED}Using default API credentials - Please configure the script!${CoR}"
-    echo -e "\n📝 Create configuration file: $CONFIG_FILE with content:"
-    echo -e "${COLOR_GREY}PROTOCOL=\"$PROTOCOL\"${CoR}     ${COLOR_YELLOW}(current default)${CoR}"
-    echo -e "${COLOR_GREY}NGINX_IP=\"$NGINX_IP\"${CoR}     ${COLOR_YELLOW}(current default)${CoR}"
-    echo -e "${COLOR_GREY}NGINX_PORT=\"$NGINX_PORT\"${CoR}  ${COLOR_YELLOW}(current default)${CoR}"
-    echo -e "${COLOR_RED}API_USER=\"admin@example.com\"${CoR}  ${COLOR_RED}(required)${CoR}"
-    echo -e "${COLOR_RED}API_PASS=\"your_password\"${CoR}     ${COLOR_RED}(required)${CoR}"
-    echo -e "${COLOR_GREY}DATA_DIR=\"$DATA_DIR\"${CoR}    ${COLOR_YELLOW}(current default)${CoR}"
-    echo -e "\n❌ ${COLOR_RED}Cannot continue with default API credentials${CoR}\n"
-    exit 1
-  fi
+  TOKEN_EXPIRY="$DEFAULT_TOKEN_EXPIRY"
 fi
 
+# Check if using default API user
+if [ "$API_USER" = "$DEFAULT_API_USER" ]; then
+  echo -e "\n⚠️ ${COLOR_RED}Using default API credentials - Please configure the script!${CoR}"
+  echo -e "\n📝 Create configuration file: $CONFIG_FILE with content:\n"
 
+  cat <<EOF | column -t -s '|'
+Parameter    | Value               | Comment
+NGINX_IP     | "$NGINX_IP"
+NGINX_PORT   | "$NGINX_PORT"
+PROTOCOL     | "$PROTOCOL"
+API_USER     | "admin@example.com" | (required)
+API_PASS     | "your_password"     | (required)
+DATA_DIR     | "$DATA_DIR"
+TOKEN_EXPIRY | "$TOKEN_EXPIRY"
+EOF
+
+  echo -e "\n❌ ${COLOR_RED}Cannot continue with default API credentials${CoR}\n"
+  exit 1
+fi
 
 # API Endpoints
 if [ "$NGINX_PORT" -ne 0 ]; then
@@ -150,9 +158,9 @@ else
     BASE_URL="$PROTOCOL://$NGINX_IP/api"
 fi
 # Set Token duration validity.
-#TOKEN_EXPIRY="365d"
-#TOKEN_EXPIRY="31536000s"
-TOKEN_EXPIRY="1d"
+# TOKEN_EXPIRY="365d"
+# TOKEN_EXPIRY="31536000s"
+# TOKEN_EXPIRY="1d"
 
 # Default variables for creating a new proxy host (adapt to your needs)
 CACHING_ENABLED=false
@@ -796,6 +804,7 @@ display_info() {
   echo -e " ${COLOR_GREEN}NGINX  IP${CoR}   : ${NGINX_IP}"
   echo -e " ${COLOR_GREEN}USER NPM${CoR}    : ${API_USER}"
   echo -e " ${COLOR_GREEN}BACKUP DIR ${CoR} : ${DATA_DIR_ID}"
+  echo -e " ${COLOR_GREEN}TOKEN EXP ${CoR}  : ${TOKEN_EXPIRY}"
   #echo -e " ${COLOR_GREEN}DOCKER Path${CoR} : ${NGINX_PATH_DOCKER}"
 
   DATE=$(date +"_%Y_%m_%d__%H_%M_%S")
@@ -971,7 +980,7 @@ display_dashboard() {
     print_row "👥 Users       " "$user_count"
     echo -e " ${COLOR_GREY}├─────────────────┼─────────┤${CoR}"
     # System
-    print_row "⏱️ Uptime       " "$uptime" "$COLOR_YELLOW"
+    print_row "⏱️ Uptime      " "$uptime" "$COLOR_YELLOW"
     print_row "📦 NPM Version " "$npm_version" "$COLOR_YELLOW"
     echo -e " ${COLOR_GREY}└─────────────────┴─────────┘${CoR}"
     echo -e "\n ${COLOR_YELLOW}💡 Use --help to see available commands${CoR}"
